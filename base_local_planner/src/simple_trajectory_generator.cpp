@@ -41,6 +41,8 @@
 
 #include <base_local_planner/velocity_iterator.h>
 
+#include <ros/console.h>
+
 namespace base_local_planner {
 
 void SimpleTrajectoryGenerator::initialise(
@@ -113,6 +115,8 @@ void SimpleTrajectoryGenerator::initialise(
       min_vel[1] = std::max(min_vel_y, vel[1] - acc_lim[1] * sim_period_);
       min_vel[2] = std::max(min_vel_th, vel[2] - acc_lim[2] * sim_period_);
     }
+
+    ROS_INFO("x: %f, th: %f", min_vel[0], min_vel[2] );
 
     Eigen::Vector3f vel_samp = Eigen::Vector3f::Zero();
     VelocityIterator x_it(min_vel[0], max_vel[0], vsamples[0]);
@@ -192,10 +196,12 @@ bool SimpleTrajectoryGenerator::generateTrajectory(
   // the required minimum velocities for translation and rotation (if set)
   if ((limits_->min_trans_vel >= 0 && vmag + eps < limits_->min_trans_vel) &&
       (limits_->min_rot_vel >= 0 && fabs(sample_target_vel[2]) + eps < limits_->min_rot_vel)) {
+          //ROS_WARN("out of min_trans_vel of min_rot_vel");
     return false;
   }
   // make sure we do not exceed max diagonal (x+y) translational velocity (if set)
   if (limits_->max_trans_vel >=0 && vmag - eps > limits_->max_trans_vel) {
+        //ROS_WARN("out of max_trans_vel");
     return false;
   }
 

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(base_local_planner)
+project(base_local_planner2)
 
 find_package(catkin REQUIRED
         COMPONENTS
@@ -53,8 +53,8 @@ generate_dynamic_reconfigure_options(
 catkin_package(
     INCLUDE_DIRS include
     LIBRARIES
-        base_local_planner
-        trajectory_planner_ros
+        base_local_planner2
+        trajectory_planner_ros2
     CATKIN_DEPENDS
         roscpp
         dynamic_reconfigure
@@ -72,7 +72,7 @@ catkin_package(
 #set(ROS_COMPILE_FLAGS "-g" ${ROS_COMPILE_FLAGS})
 #set(ROS_LINK_FLAGS "-g" ${ROS_LINK_FLAGS})
 
-add_library(base_local_planner
+add_library(base_local_planner2
 	src/footprint_helper.cpp
 	src/goal_functions.cpp
 	src/map_cell.cpp
@@ -91,29 +91,29 @@ add_library(base_local_planner
 	src/simple_trajectory_generator.cpp
 	src/trajectory.cpp
 	src/voxel_grid_model.cpp)
-add_dependencies(base_local_planner base_local_planner_gencfg)
-add_dependencies(base_local_planner base_local_planner_gencpp)
-add_dependencies(base_local_planner nav_msgs_gencpp)
-target_link_libraries(base_local_planner
+add_dependencies(base_local_planner2 base_local_planner2_gencfg)
+add_dependencies(base_local_planner2 base_local_planner2_gencpp)
+add_dependencies(base_local_planner2 nav_msgs_gencpp)
+target_link_libraries(base_local_planner2
     ${catkin_LIBRARIES}
     ${PCL_LIBRARIES}
     ${Boost_LIBRARIES}
     ${Eigen_LIBRARIES}
     )
 
-add_library(trajectory_planner_ros
+add_library(trajectory_planner_ros2
 	src/trajectory_planner.cpp
 	src/trajectory_planner_ros.cpp)
-add_dependencies(trajectory_planner_ros nav_msgs_gencpp)
-target_link_libraries(trajectory_planner_ros
-     base_local_planner)
+add_dependencies(trajectory_planner_ros2 nav_msgs_gencpp)
+target_link_libraries(trajectory_planner_ros2
+     base_local_planner2)
 
 add_executable(point_grid src/point_grid.cpp)
 target_link_libraries(point_grid ${catkin_LIBRARIES})
 
 install(TARGETS
-            base_local_planner
-            trajectory_planner_ros
+            base_local_planner2
+            trajectory_planner_ros2
        ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
        LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
        )

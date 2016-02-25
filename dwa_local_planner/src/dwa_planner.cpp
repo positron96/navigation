@@ -48,6 +48,8 @@
 
 #include <pcl_conversions/pcl_conversions.h>
 
+#include <iostream>
+
 namespace dwa_local_planner {
   void DWAPlanner::reconfigure(DWAPlannerConfig &config)
   {
@@ -317,6 +319,7 @@ namespace dwa_local_planner {
     // find best trajectory by sampling and scoring the samples
     std::vector<base_local_planner::Trajectory> all_explored;
     scored_sampling_planner_.findBestTrajectory(result_traj_, &all_explored);
+    std::cout<<__PRETTY_FUNCTION__<<": found "<<all_explored.size()<<std::endl;
 
     if(publish_traj_pc_)
     {

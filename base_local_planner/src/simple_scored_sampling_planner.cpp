@@ -91,7 +91,7 @@ namespace base_local_planner {
         return false;
       }
     }
-
+    ROS_INFO("preved!");
     for (std::vector<TrajectorySampleGenerator*>::iterator loop_gen = gen_list_.begin(); loop_gen != gen_list_.end(); ++loop_gen) {
       count = 0;
       count_valid = 0;

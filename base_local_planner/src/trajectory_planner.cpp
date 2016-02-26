@@ -599,6 +599,7 @@ namespace base_local_planner{
         vtheta_samp = min_vel_theta;
         //next sample all theta trajectories
         for(int j = 0; j < vtheta_samples_ - 1; ++j){
+            ROS_INFO("testing traj %f %f", vx_samp, vtheta_samp);
           generateTrajectory(x, y, theta, vx, vy, vtheta, vx_samp, vy_samp, vtheta_samp,
               acc_x, acc_y, acc_theta, impossible_cost, *comp_traj);
 

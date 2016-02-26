@@ -579,6 +579,11 @@ namespace base_local_planner{
 
     //any cell with a cost greater than the size of the map is impossible
     double impossible_cost = path_map_.obstacleCosts();
+    
+    //* score staying in place
+    generateTrajectory(x, y, theta, vx, vy, vtheta, 0, 0, 0,
+            acc_x, acc_y, acc_theta, impossible_cost, *comp_traj);
+    double staying_cost = comp_traj->cost_;
 
     //if we're performing an escape we won't allow moving forward
     if (!escaping_) {
@@ -599,7 +604,6 @@ namespace base_local_planner{
         vtheta_samp = min_vel_theta;
         //next sample all theta trajectories
         for(int j = 0; j < vtheta_samples_ - 1; ++j){
-            ROS_INFO("testing traj %f %f", vx_samp, vtheta_samp);
           generateTrajectory(x, y, theta, vx, vy, vtheta, vx_samp, vy_samp, vtheta_samp,
               acc_x, acc_y, acc_theta, impossible_cost, *comp_traj);
 
@@ -644,7 +648,7 @@ namespace base_local_planner{
         }
       }
     } // end if not escaping
-
+    
     //next we want to generate trajectories for rotating in place
     vtheta_samp = min_vel_theta;
     vx_samp = 0.0;
@@ -696,6 +700,33 @@ namespace base_local_planner{
 
       vtheta_samp += dvtheta;
     }
+    
+    if (best_traj->cost_ >= staying_cost) {
+        // staying in place is the best trajectory, start rotating in place.
+        heading_dist = DBL_MAX; 
+        for(int i=-1; i<2; i+=2) { // i= -1 and 1
+            generateTrajectory(x, y, theta, vx, vy, vtheta, 0, 0, i*max_vel_theta,
+                    acc_x, acc_y, acc_theta, impossible_cost, *comp_traj) ;
+            if(comp_traj->cost_ > 0) {
+                
+                double x_r, y_r, th_r;
+                unsigned int cell_x, cell_y;
+                comp_traj->getEndpoint(x_r, y_r, th_r);
+                x_r += heading_lookahead_ * cos(th_r);
+                y_r += heading_lookahead_ * sin(th_r);
+                costmap_.worldToMap(x_r, y_r, cell_x, cell_y);
+               
+                double heading = headingDiff(cell_x, cell_y, x_r, y_r, th_r);
+                if(heading < heading_dist) {
+                    swap = best_traj;
+                    best_traj = comp_traj;
+                    comp_traj = swap;
+                    heading_dist = heading;
+                }                
+            }
+        }
+        ROS_DEBUG("Rotating in place with thetav=%f", best_traj->thetav_);
+    } 
 
     //do we have a legal trajectory
     if (best_traj->cost_ >= 0) {

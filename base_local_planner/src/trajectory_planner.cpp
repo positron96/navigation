@@ -148,7 +148,7 @@ namespace base_local_planner{
       double heading_lookahead, double oscillation_reset_dist,
       double escape_reset_dist, double escape_reset_theta,
       bool holonomic_robot,
-      double max_vel_x, double min_vel_x,
+      double max_vel_x, double min_vel_x, double max_vel_x_rot,
       double max_vel_th, double min_vel_th, double min_in_place_vel_th,
       double backup_vel,
       bool dwa, bool heading_scoring, double heading_scoring_timestep, bool meter_scoring, bool simple_attractor,
@@ -164,7 +164,7 @@ namespace base_local_planner{
     prev_x_(0), prev_y_(0), escape_x_(0), escape_y_(0), escape_theta_(0), heading_lookahead_(heading_lookahead),
     oscillation_reset_dist_(oscillation_reset_dist), escape_reset_dist_(escape_reset_dist),
     escape_reset_theta_(escape_reset_theta), holonomic_robot_(holonomic_robot),
-    max_vel_x_(max_vel_x), min_vel_x_(min_vel_x),
+    max_vel_x_(max_vel_x), min_vel_x_(min_vel_x), max_vel_x_rot_(max_vel_x_rot),
     max_vel_th_(max_vel_th), min_vel_th_(min_vel_th), min_in_place_vel_th_(min_in_place_vel_th),
     backup_vel_(backup_vel),
     dwa_(dwa), heading_scoring_(heading_scoring), heading_scoring_timestep_(heading_scoring_timestep),
@@ -536,7 +536,7 @@ namespace base_local_planner{
       double vx, double vy, double vtheta,
       double acc_x, double acc_y, double acc_theta) {
     //compute feasible velocity limits in robot space
-    double max_vel_x = max_vel_x_, max_vel_theta;
+    double max_vel_x = max_vel_x_, max_vel_x_rot = max_vel_x_rot_, max_vel_theta;
     double min_vel_x, min_vel_theta;
 
     if( final_goal_position_valid_ ){
@@ -547,12 +547,14 @@ namespace base_local_planner{
     //should we use the dynamic window approach?
     if (dwa_) {
       max_vel_x = max(min(max_vel_x, vx + acc_x * sim_period_), min_vel_x_);
+      max_vel_x_rot = max(min(max_vel_x_rot, vx + acc_x * sim_period_), min_vel_x_);
       min_vel_x = max(min_vel_x_, vx - acc_x * sim_period_);
 
       max_vel_theta = min(max_vel_th_, vtheta + acc_theta * sim_period_);
       min_vel_theta = max(min_vel_th_, vtheta - acc_theta * sim_period_);
     } else {
       max_vel_x = max(min(max_vel_x, vx + acc_x * sim_time_), min_vel_x_);
+      max_vel_x_rot = max(min(max_vel_x_rot, vx + acc_x * sim_time_), min_vel_x_);
       min_vel_x = max(min_vel_x_, vx - acc_x * sim_time_);
 
       max_vel_theta = min(max_vel_th_, vtheta + acc_theta * sim_time_);
@@ -587,10 +589,11 @@ namespace base_local_planner{
 
     //if we're performing an escape we won't allow moving forward
     if (!escaping_) {
-      //loop through all x velocities
+      
+      //first sample straight trajectories
+      vtheta_samp = 0;
       for(int i = 0; i < vx_samples_; ++i) {
-        vtheta_samp = 0;
-        //first sample the straight trajectory
+        
         generateTrajectory(x, y, theta, vx, vy, vtheta, vx_samp, vy_samp, vtheta_samp,
             acc_x, acc_y, acc_theta, impossible_cost, *comp_traj);
 
@@ -600,10 +603,25 @@ namespace base_local_planner{
           best_traj = comp_traj;
           comp_traj = swap;
         }
+        
+        vx_samp += dvx;
+      }
 
-        vtheta_samp = min_vel_theta;
-        //next sample all theta trajectories
-        for(int j = 0; j < vtheta_samples_ - 1; ++j){
+      // next sample all curved trajectories, taking into account max_vel_x_rot
+      
+      vtheta_samp = min_vel_theta;
+
+      for(int j = 0; j < vtheta_samples_ - 1; ++j) {
+        
+        vx_samp = min_vel_x;
+        
+        //* how curved is the trajectory (0-straight, 1-max curvative):
+        double curv = fabs(vtheta_samp) / max( fabs(min_vel_theta), max_vel_theta );
+        double tmax_vel_x = max_vel_x - (max_vel_x - max_vel_x_rot)*curv;
+        dvx = tmax_vel_x / (vx_samples_ - 1);
+        
+        for(int i = 0; i < vx_samples_; ++i) {
+          
           generateTrajectory(x, y, theta, vx, vy, vtheta, vx_samp, vy_samp, vtheta_samp,
               acc_x, acc_y, acc_theta, impossible_cost, *comp_traj);
 
@@ -613,10 +631,14 @@ namespace base_local_planner{
             best_traj = comp_traj;
             comp_traj = swap;
           }
-          vtheta_samp += dvtheta;
+          
+          vx_samp += dvx;
         }
-        vx_samp += dvx;
+        
+        vtheta_samp += dvtheta;
       }
+        
+      
 
       //only explore y velocities with holonomic robots
       if (holonomic_robot_) {

@@ -101,7 +101,7 @@ namespace base_local_planner {
       double pdist_scale, gdist_scale, occdist_scale, heading_lookahead, oscillation_reset_dist, escape_reset_dist, escape_reset_theta;
       bool holonomic_robot, dwa, simple_attractor, heading_scoring;
       double heading_scoring_timestep;
-      double max_vel_x, min_vel_x;
+      double max_vel_x, min_vel_x, max_vel_x_rot;
       double backup_vel;
       double stop_time_buffer;
       std::string world_model_type;
@@ -119,7 +119,7 @@ namespace base_local_planner {
       private_nh.param("xy_goal_tolerance", xy_goal_tolerance_, 0.10);
       private_nh.param("acc_lim_x", acc_lim_x_, 2.5);
       private_nh.param("acc_lim_y", acc_lim_y_, 2.5);
-      private_nh.param("acc_lim_theta", acc_lim_theta_, 3.2);
+      private_nh.param("acc_lim_theta", acc_lim_theta_, 3.2);         
 
       private_nh.param("stop_time_buffer", stop_time_buffer, 0.2);
 
@@ -190,6 +190,7 @@ namespace base_local_planner {
       private_nh.param("holonomic_robot", holonomic_robot, true);
       private_nh.param("max_vel_x", max_vel_x, 0.5);
       private_nh.param("min_vel_x", min_vel_x, 0.1);
+      private_nh.param("max_vel_x_with_rot", max_vel_x_rot, max_vel_x);
 
       double max_rotational_vel;
       private_nh.param("max_rotational_vel", max_rotational_vel, 1.0);
@@ -230,7 +231,7 @@ namespace base_local_planner {
       tc_ = new TrajectoryPlanner(*world_model_, *costmap_, footprint_spec_,
           acc_lim_x_, acc_lim_y_, acc_lim_theta_, sim_time, sim_granularity, vx_samples, vtheta_samples, pdist_scale,
           gdist_scale, occdist_scale, heading_lookahead, oscillation_reset_dist, escape_reset_dist, escape_reset_theta, holonomic_robot,
-          max_vel_x, min_vel_x, max_vel_th_, min_vel_th_, min_in_place_vel_th_, backup_vel,
+          max_vel_x, min_vel_x, max_vel_x_rot, max_vel_th_, min_vel_th_, min_in_place_vel_th_, backup_vel,
           dwa, heading_scoring, heading_scoring_timestep, meter_scoring, simple_attractor, y_vels, stop_time_buffer, sim_period_, angular_sim_granularity);
 
       map_viz_.initialize(name, global_frame_, boost::bind(&TrajectoryPlanner::getCellCosts, tc_, _1, _2, _3, _4, _5, _6));

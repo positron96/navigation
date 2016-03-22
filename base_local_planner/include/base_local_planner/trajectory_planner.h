@@ -91,8 +91,9 @@ namespace base_local_planner {
        * @param escape_reset_dist The distance the robot must travel before it can exit escape mode
        * @param escape_reset_theta The distance the robot must rotate before it can exit escape mode
        * @param holonomic_robot Set this to true if the robot being controlled can take y velocities and false otherwise
-       * @param max_vel_x The maximum x velocity the controller will explore
+       * @param max_vel_x The maximum x velocity the controller will explore (when no rotation component is present)
        * @param min_vel_x The minimum x velocity the controller will explore
+       * @param max_vel_x_rot The maximum x velocity to explore (when maximum rotational velocity is also applied).
        * @param max_vel_th The maximum rotational velocity the controller will explore
        * @param min_vel_th The minimum rotational velocity the controller will explore
        * @param min_in_place_vel_th The absolute value of the minimum in-place rotational velocity the controller will explore
@@ -115,7 +116,7 @@ namespace base_local_planner {
           double heading_lookahead = 0.325, double oscillation_reset_dist = 0.05, 
           double escape_reset_dist = 0.10, double escape_reset_theta = M_PI_2,
           bool holonomic_robot = true,
-          double max_vel_x = 0.5, double min_vel_x = 0.1, 
+          double max_vel_x = 0.5, double min_vel_x = 0.1, double max_vel_x_rot=0.5,
           double max_vel_th = 1.0, double min_vel_th = -1.0, double min_in_place_vel_th = 0.4,
           double backup_vel = -0.1,
           bool dwa = false, bool heading_scoring = false, double heading_scoring_timestep = 0.1,
@@ -302,7 +303,7 @@ namespace base_local_planner {
       double escape_reset_dist_, escape_reset_theta_; ///< @brief The distance the robot must travel before it can leave escape mode
       bool holonomic_robot_; ///< @brief Is the robot holonomic or not? 
       
-      double max_vel_x_, min_vel_x_, max_vel_th_, min_vel_th_, min_in_place_vel_th_; ///< @brief Velocity limits for the controller
+      double max_vel_x_, min_vel_x_, max_vel_x_rot_, max_vel_th_, min_vel_th_, min_in_place_vel_th_; ///< @brief Velocity limits for the controller
 
       double backup_vel_; ///< @brief The velocity to use while backing up
 

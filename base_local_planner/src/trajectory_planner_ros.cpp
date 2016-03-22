@@ -190,7 +190,7 @@ namespace base_local_planner {
       private_nh.param("holonomic_robot", holonomic_robot, true);
       private_nh.param("max_vel_x", max_vel_x, 0.5);
       private_nh.param("min_vel_x", min_vel_x, 0.1);
-      private_nh.param("max_vel_x_with_rot", max_vel_x_rot, max_vel_x);
+      private_nh.param("max_vel_x_with_rot", max_vel_x_rot, -1.0);
 
       double max_rotational_vel;
       private_nh.param("max_rotational_vel", max_rotational_vel, 1.0);

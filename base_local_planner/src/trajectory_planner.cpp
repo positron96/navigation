@@ -68,6 +68,7 @@ namespace base_local_planner{
 
       max_vel_x_ = config.max_vel_x;
       min_vel_x_ = config.min_vel_x;
+      max_vel_x_rot_ = config.max_vel_x_rot;
       
       max_vel_th_ = config.max_vel_theta;
       min_vel_th_ = config.min_vel_theta;
@@ -536,8 +537,9 @@ namespace base_local_planner{
       double vx, double vy, double vtheta,
       double acc_x, double acc_y, double acc_theta) {
     //compute feasible velocity limits in robot space
-    double max_vel_x = max_vel_x_, max_vel_x_rot = max_vel_x_rot_, max_vel_theta;
+    double max_vel_x = max_vel_x_, max_vel_x_rot = max_vel_x_rot_, max_vel_theta;    
     double min_vel_x, min_vel_theta;
+    if(max_vel_x_rot == -1) max_vel_x_rot = max_vel_x_;
 
     if( final_goal_position_valid_ ){
       double final_goal_dist = hypot( final_goal_x_ - x, final_goal_y_ - y );

@@ -72,6 +72,9 @@
 
 #include <base_local_planner/odometry_helper_ros.h>
 
+#include <pcl_ros/point_cloud.h>
+#include <pcl/point_types.h>
+
 namespace base_local_planner {
   /**
    * @class TrajectoryPlannerROS
@@ -218,6 +221,7 @@ namespace base_local_planner {
       bool latch_xy_goal_tolerance_, xy_tolerance_latch_;
 
       ros::Publisher g_plan_pub_, l_plan_pub_;
+      ros::Publisher endpoints_pub_;
 
       dynamic_reconfigure::Server<BaseLocalPlannerConfig> *dsrv_;
       base_local_planner::BaseLocalPlannerConfig default_config_;

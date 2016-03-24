@@ -170,6 +170,7 @@ namespace base_local_planner{
     backup_vel_(backup_vel),
     dwa_(dwa), heading_scoring_(heading_scoring), heading_scoring_timestep_(heading_scoring_timestep),
     simple_attractor_(simple_attractor), y_vels_(y_vels), stop_time_buffer_(stop_time_buffer), sim_period_(sim_period)
+  , endpoints_cloud_(new TrajPointCloud)
   {
     //the robot is not stuck to begin with
     stuck_left = false;
@@ -183,7 +184,6 @@ namespace base_local_planner{
 
     escaping_ = false;
     final_goal_position_valid_ = false;
-
 
     costmap_2d::calculateMinAndMaxDistances(footprint_spec_, inscribed_radius_, circumscribed_radius_);
   }
@@ -367,6 +367,13 @@ namespace base_local_planner{
       cost = occdist_scale_ * occ_cost + pdist_scale_ * path_dist + 0.3 * heading_diff + goal_dist * gdist_scale_;
     }
     traj.cost_ = cost;
+    if(traj.cost_ > 0) {
+        double xx,yy,th;
+        traj.getEndpoint(xx,yy,th);
+        pcl::PointXYZI pt;
+        pt.x = xx; pt.y = yy; pt.z = 0; pt.intensity = traj.cost_;
+        endpoints_cloud_->push_back( pt );
+    }
   }
 
   double TrajectoryPlanner::headingDiff(int cell_x, int cell_y, double x, double y, double heading){
@@ -540,6 +547,8 @@ namespace base_local_planner{
     double max_vel_x = max_vel_x_, max_vel_x_rot = max_vel_x_rot_, max_vel_theta;    
     double min_vel_x, min_vel_theta;
     if(max_vel_x_rot == -1) max_vel_x_rot = max_vel_x_;
+    
+    endpoints_cloud_->clear();
 
     if( final_goal_position_valid_ ){
       double final_goal_dist = hypot( final_goal_x_ - x, final_goal_y_ - y );
@@ -617,7 +626,7 @@ namespace base_local_planner{
         
         vx_samp = min_vel_x;
         
-        //* how curved is the trajectory (0-straight, 1-max curvative):
+        //* how curved the trajectory is (0-straight, 1-max curvative):
         double curv = fabs(vtheta_samp) / max( fabs(min_vel_theta), max_vel_theta );
         double tmax_vel_x = max_vel_x - (max_vel_x - max_vel_x_rot)*curv;
         dvx = tmax_vel_x / (vx_samples_ - 1);

@@ -61,6 +61,8 @@
 #include <base_local_planner/map_cell.h>
 #include <base_local_planner/map_grid.h>
 
+typedef pcl::PointCloud<pcl::PointXYZI> TrajPointCloud;
+
 namespace base_local_planner {
   /**
    * @class TrajectoryPlanner
@@ -210,6 +212,9 @@ namespace base_local_planner {
       /** @brief Return the footprint specification of the robot. */
       geometry_msgs::Polygon getFootprintPolygon() const { return costmap_2d::toPolygon(footprint_spec_); }
       std::vector<geometry_msgs::Point> getFootprint() const { return footprint_spec_; }
+      
+      TrajPointCloud::Ptr endpoints_cloud_;
+    
 
     private:
       /**

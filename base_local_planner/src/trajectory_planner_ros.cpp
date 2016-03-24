@@ -51,7 +51,6 @@
 #include <nav_msgs/Path.h>
 
 
-
 //register this planner as a BaseLocalPlanner plugin
 PLUGINLIB_EXPORT_CLASS(base_local_planner::TrajectoryPlannerROS, nav_core::BaseLocalPlanner)
 
@@ -90,8 +89,7 @@ namespace base_local_planner {
       ros::NodeHandle private_nh("~/" + name);
       g_plan_pub_ = private_nh.advertise<nav_msgs::Path>("global_plan", 1);
       l_plan_pub_ = private_nh.advertise<nav_msgs::Path>("local_plan", 1);
-
-
+      
       tf_ = tf;
       costmap_ros_ = costmap_ros;
       rot_stopped_velocity_ = 1e-2;
@@ -240,6 +238,9 @@ namespace base_local_planner {
       dsrv_ = new dynamic_reconfigure::Server<BaseLocalPlannerConfig>(private_nh);
       dynamic_reconfigure::Server<BaseLocalPlannerConfig>::CallbackType cb = boost::bind(&TrajectoryPlannerROS::reconfigureCB, this, _1, _2);
       dsrv_->setCallback(cb);
+      
+      tc_->endpoints_cloud_->header.frame_id = global_frame_;
+      endpoints_pub_ = private_nh.advertise<TrajPointCloud > ("endpoints", 1);
 
     } else {
       ROS_WARN("This planner has already been initialized, doing nothing");
@@ -444,6 +445,10 @@ namespace base_local_planner {
         tc_->updatePlan(transformed_plan);
         Trajectory path = tc_->findBestPath(global_pose, robot_vel, drive_cmds);
         map_viz_.publishCostCloud(costmap_);
+        
+        tc_->endpoints_cloud_->header.stamp = ros::Time::now().toNSec();
+        ROS_INFO("publishing %lu points 1", tc_->endpoints_cloud_->size() );
+        endpoints_pub_.publish( tc_->endpoints_cloud_ );
 
         //copy over the odometry information
         nav_msgs::Odometry base_odom;
@@ -479,6 +484,11 @@ namespace base_local_planner {
     Trajectory path = tc_->findBestPath(global_pose, robot_vel, drive_cmds);
 
     map_viz_.publishCostCloud(costmap_);
+    
+    tc_->endpoints_cloud_->header.stamp = ros::Time::now().toNSec();
+    //tc_->endpoints_cloud_->
+    ROS_INFO("publishing %lu points 2", tc_->endpoints_cloud_->size() );
+    endpoints_pub_.publish( tc_->endpoints_cloud_ );
     /* For timing uncomment
     gettimeofday(&end, NULL);
     start_t = start.tv_sec + double(start.tv_usec) / 1e6;
